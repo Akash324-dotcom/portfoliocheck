@@ -1,6 +1,7 @@
 # Portfolio Risk Check
 
-https://portfolio-risk-check.onrender.com/
+LIVE URL - https://portfolio-risk-check.onrender.com/
+
 A small web app built on the SnapTrade OAuth API. You sign in with SnapTrade, the app reads your accounts and positions (read-only), and it flags concentration risk: one holding dominating, too few holdings, one asset type, mixed currencies.
 
 ## How it works
