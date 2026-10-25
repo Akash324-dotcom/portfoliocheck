@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio Risk Check</title>
+<meta name="description" content="See how concentrated your investments are. Read-only, powered by SnapTrade.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>
+(function () {
+  var theme = "light";
+  try {
+    theme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  } catch (error) {
+    theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <span class="blob b1"></span>
+  <span class="blob b2"></span>
+  <span class="blob b3"></span>
+  <span class="grid-lines"></span>
+</div>
+
+<header class="top">
+  <a class="brand" href="/">
+    <span class="logo">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 8-9"/><path d="M15 5h5v5"/></svg>
+    </span>
+    <span class="brand-text">Portfolio Risk Check</span>
+  </a>
+  <div class="top-actions">
+    <button id="theme" class="icon-btn" type="button" aria-label="Switch between light and dark mode">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+    </button>
+    <button id="logout" class="btn ghost small hidden" type="button">Sign out</button>
+  </div>
+</header>
+
+<main>
+  <section id="hero" class="hero hidden">
+    <span class="pill"><i class="dot"></i> Read-only access · Powered by SnapTrade</span>
+    <h1>Is your portfolio <span class="grad">too concentrated?</span></h1>
+    <p class="lead">Connect your brokerage through SnapTrade and get a plain-English risk check in seconds: what dominates your portfolio, how spread out it is, and what would happen if your biggest holding dropped.</p>
+    <div class="hero-actions">
+      <a id="signin-btn" class="btn primary large" href="/login">
+        <span class="btn-label">Sign in with SnapTrade</span>
+        <span class="spinner" aria-hidden="true"></span>
+      </a>
+      <span class="muted small">Takes about 30 seconds</span>
+    </div>
+    <ul class="features">
+      <li class="feature" style="--i:1">
+        <span class="f-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+        </span>
+        <strong>Read-only</strong>
+        <span>The app can look but never trade or move money.</span>
+      </li>
+      <li class="feature" style="--i:2">
+        <span class="f-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-9-9"/><path d="M12 3v9h9"/></svg>
+        </span>
+        <strong>Clear answers</strong>
+        <span>A score, a chart and short explanations, no jargon.</span>
+      </li>
+      <li class="feature" style="--i:3">
+        <span class="f-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        </span>
+        <strong>Nothing saved</strong>
+        <span>Your holdings are never stored by this app.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section id="loading" class="loading" aria-live="polite" aria-label="Loading your portfolio">
+    <div class="skeleton tall"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton wide"></div>
+  </section>
+
+  <section id="error" class="notice hidden" role="alert">
+    <strong>Something went wrong</strong>
+    <span id="error-text"></span>
+    <button id="retry" class="btn ghost small" type="button">Try again</button>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div id="chips" class="chips hidden" role="tablist" aria-label="Accounts"></div>
+
+    <div class="grid-top">
+      <article class="card gauge-card reveal" id="gauge-card" data-level="unknown">
+        <h2>Risk score</h2>
+        <div class="gauge">
+          <svg viewBox="0 0 200 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="gauge-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#16a34a"/>
+                <stop offset="55%" stop-color="#f59e0b"/>
+                <stop offset="100%" stop-color="#ef4444"/>
+              </linearGradient>
+            </defs>
+            <path class="gauge-track" d="M 20 100 A 80 80 0 0 1 180 100"/>
+            <path id="gauge-fill" class="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100"/>
+          </svg>
+          <div class="gauge-center">
+            <strong id="score-num">0</strong>
+            <span id="level-label" class="level-label">—</span>
+          </div>
+        </div>
+        <p id="score-note" class="muted note"></p>
+        <p class="scale muted small"><span>0 safer</span><span>100 riskier</span></p>
+      </article>
+
+      <div class="stats">
+        <article class="card stat reveal">
+          <span class="label">Total value</span>
+          <strong id="total">—</strong>
+          <span id="total-sub" class="sub"></span>
+        </article>
+        <article class="card stat reveal">
+          <span class="label">Holdings</span>
+          <strong id="count">—</strong>
+          <span id="effective" class="sub"></span>
+        </article>
+        <article class="card stat reveal">
+          <span class="label">Largest holding</span>
+          <strong id="top-weight">—</strong>
+          <span id="top-symbol" class="sub"></span>
+        </article>
+        <article class="card stat reveal">
+          <span class="label">Top three together</span>
+          <strong id="top-three">—</strong>
+          <span class="sub">of your portfolio</span>
+        </article>
+      </div>
+    </div>
+
+    <div class="grid-mid">
+      <article class="card reveal">
+        <h2>Where your money sits</h2>
+        <div id="donut-wrap" class="donut-wrap">
+          <div class="donut">
+            <svg viewBox="0 0 200 200" aria-hidden="true">
+              <circle class="donut-track" cx="100" cy="100" r="70"/>
+              <g id="donut-segs" transform="rotate(-90 100 100)"></g>
+            </svg>
+            <div class="donut-center">
+              <strong id="donut-main">—</strong>
+              <span id="donut-sub">holdings</span>
+            </div>
+          </div>
+          <ul id="legend" class="legend"></ul>
+        </div>
+        <p id="donut-empty" class="muted hidden">No holdings to chart.</p>
+      </article>
+
+      <article class="card reveal">
+        <h2>What we found</h2>
+        <ul id="flags" class="flags"></ul>
+      </article>
+    </div>
+
+    <article class="card whatif reveal" id="whatif">
+      <div class="whatif-head">
+        <h2>What if it drops?</h2>
+        <span class="muted small">Drag the slider to see the effect on your whole portfolio.</span>
+      </div>
+      <div class="whatif-body">
+        <div class="whatif-controls">
+          <label class="field">
+            <span class="label">Holding</span>
+            <select id="whatif-select"></select>
+          </label>
+          <label class="field">
+            <span class="label">Falls by <b id="whatif-pct">30%</b></span>
+            <input id="whatif-range" type="range" min="5" max="90" step="5" value="30">
+          </label>
+        </div>
+        <div class="whatif-result" aria-live="polite">
+          <strong id="whatif-impact">—</strong>
+          <span id="whatif-money" class="sub"></span>
+          <p id="whatif-text" class="muted note"></p>
+        </div>
+      </div>
+    </article>
+
+    <article class="card reveal">
+      <div class="table-head">
+        <h2>Holdings</h2>
+        <label class="search">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Search holdings" autocomplete="off">
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><button class="sort" data-sort="symbol" type="button">Symbol <i></i></button></th>
+              <th><button class="sort" data-sort="kind" type="button">Type <i></i></button></th>
+              <th class="num"><button class="sort" data-sort="value" type="button">Value <i></i></button></th>
+              <th class="weight-col"><button class="sort" data-sort="weight" type="button">Share of portfolio <i></i></button></th>
+            </tr>
+          </thead>
+          <tbody id="holdings"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="muted hidden empty">Nothing matches.</p>
+    </article>
+
+    <article class="card reveal">
+      <h2>Accounts</h2>
+      <ul id="accounts" class="accounts"></ul>
+    </article>
+
+    <p class="muted small footnote">Guidelines used: no single holding above 25%, top three below 60%, at least 5 holdings, no asset type above 90%. This is an educational tool, not financial advice.</p>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
